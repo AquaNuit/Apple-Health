@@ -1,0 +1,50 @@
+name: Build Goose iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows you to trigger the build manually from the Actions tab
+
+jobs:
+  build:
+    runs-on: macos-latest # Uses GitHub's cloud macOS runners
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install Rust iOS Targets
+      run: |
+        rustup target add aarch64-apple-ios
+        rustup target add aarch64-apple-ios-sim
+        rustup target add x86_64-apple-ios
+
+    - name: Make Build Script Executable
+      run: |
+        cd goose-main
+        chmod +x Scripts/build_ios_rust.sh
+
+    - name: Build iOS App (Unsigned)
+      run: |
+        cd goose-main
+        xcodebuild -project GooseSwift.xcodeproj \
+        -scheme GooseSwift \
+        -configuration Debug \
+        -destination 'generic/platform=iOS' \
+        CODE_SIGNING_ALLOWED=NO \
+        CODE_SIGNING_REQUIRED=NO \
+        CODE_SIGNING_IDENTITY="" \
+        -derivedDataPath ./build
+
+    - name: Package into IPA
+      run: |
+        cd goose-main
+        mkdir -p Payload
+        cp -r build/Build/Products/Debug-iphoneos/GooseSwift.app Payload/
+        zip -r GooseSwift-Unsigned.ipa Payload
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GooseSwift-App
+        path: goose-main/GooseSwift-Unsigned.ipa
