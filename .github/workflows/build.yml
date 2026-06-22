@@ -20,13 +20,10 @@ jobs:
         rustup target add x86_64-apple-ios
 
     - name: Make Build Script Executable
-      run: |
-        cd goose-main
-        chmod +x Scripts/build_ios_rust.sh
+      run: chmod +x Scripts/build_ios_rust.sh
 
     - name: Build iOS App (Unsigned)
       run: |
-        cd goose-main
         xcodebuild -project GooseSwift.xcodeproj \
         -scheme GooseSwift \
         -configuration Debug \
@@ -38,7 +35,6 @@ jobs:
 
     - name: Package into IPA
       run: |
-        cd goose-main
         mkdir -p Payload
         cp -r build/Build/Products/Debug-iphoneos/GooseSwift.app Payload/
         zip -r GooseSwift-Unsigned.ipa Payload
@@ -47,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: GooseSwift-App
-        path: goose-main/GooseSwift-Unsigned.ipa
+        path: GooseSwift-Unsigned.ipa
